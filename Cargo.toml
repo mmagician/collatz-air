@@ -1,0 +1,19 @@
+[workspace]
+members = [
+    "plonky3-collatz",
+    "winterfell-collatz"
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Marti Gorny <marti@np.engineering>"]
+description = "Collatz sequence implementations using Plonky3 and Winterfell backends"
+license = "MIT"
+repository = "https://github.com/m2magician/collatz-air"
+
+[workspace.dependencies]
+tracing = { version = "0.1", default-features = false }
+tracing-forest = { version = "0.1", features = ["ansi", "smallvec"] }
+tracing-subscriber = { version = "0.3", features = ["std", "env-filter"] }
