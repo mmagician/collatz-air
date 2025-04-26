@@ -16,10 +16,25 @@ use tracing_subscriber::util::SubscriberInitExt;
 use tracing_subscriber::{EnvFilter, Registry};
 
 mod air;
+mod utils;
+
 use air::*;
+use utils::generate_collatz_trace;
 
 const N: usize = 6;
+
+// Type definitions
+type Val = BabyBear;
+type Challenge = BinomialExtensionField<Val, 4>;
+type ByteHash = Keccak256Hash;
+type FieldHash = SerializingHasher<ByteHash>;
+type MyCompress = CompressionFunctionFromHasher<ByteHash, 2, 32>;
 type Dft = p3_dft::Radix2Bowers;
+type ValMmcs = MerkleTreeMmcs<Val, u8, FieldHash, MyCompress, 32>;
+type ChallengeMmcs = ExtensionMmcs<Val, Challenge, ValMmcs>;
+type Challenger = SerializingChallenger32<Val, HashChallenger<u8, ByteHash, 32>>;
+type Pcs = TwoAdicFriPcs<Val, Dft, ValMmcs, ChallengeMmcs>;
+type MyConfig = StarkConfig<Pcs, Challenge, Challenger>;
 
 fn main() -> Result<(), impl Debug> {
     let env_filter = EnvFilter::builder()
@@ -31,37 +46,26 @@ fn main() -> Result<(), impl Debug> {
         .with(ForestLayer::default())
         .init();
 
-    type Val = BabyBear;
-    type Challenge = BinomialExtensionField<Val, 4>;
-
-    type ByteHash = Keccak256Hash;
-    type FieldHash = SerializingHasher<ByteHash>;
     let byte_hash = ByteHash {};
     let field_hash = FieldHash::new(Keccak256Hash {});
 
-    type MyCompress = CompressionFunctionFromHasher<ByteHash, 2, 32>;
     let compress = MyCompress::new(byte_hash);
 
-    type ValMmcs = MerkleTreeMmcs<Val, u8, FieldHash, MyCompress, 32>;
     let val_mmcs = ValMmcs::new(field_hash, compress);
 
-    type ChallengeMmcs = ExtensionMmcs<Val, Challenge, ValMmcs>;
     let challenge_mmcs = ChallengeMmcs::new(val_mmcs.clone());
 
-    type Challenger = SerializingChallenger32<Val, HashChallenger<u8, ByteHash, 32>>;
     let challenger = Challenger::from_hasher(vec![], byte_hash);
 
     let fri_config = create_benchmark_fri_config(challenge_mmcs);
 
     let dft = Dft::default();
 
-    type Pcs = TwoAdicFriPcs<Val, Dft, ValMmcs, ChallengeMmcs>;
     let pcs = Pcs::new(dft, val_mmcs, fri_config);
 
-    type MyConfig = StarkConfig<Pcs, Challenge, Challenger>;
     let config = MyConfig::new(pcs, challenger);
 
-    let starting_value = 52; // Choose the starting value for Collatz
+    let starting_value = 52;
     let air = CollatzAir::<N> { starting_value };
     let trace = generate_collatz_trace::<N, Val>(starting_value);
 
