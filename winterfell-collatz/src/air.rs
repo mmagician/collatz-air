@@ -3,15 +3,11 @@ use winterfell::{
     Air, AirContext, Assertion, EvaluationFrame, TransitionConstraintDegree,
 };
 use crate::utils::PublicInputs;
+use crate::utils::is_binary;
 
 pub struct CollatzAir<const N: usize> {
     context: AirContext<BaseElement>,
     first: [BaseElement; N],
-}
-
-/// Returns zero only when a = zero || a == one.
-fn is_binary<E: FieldElement>(a: E) -> E {
-    a * a - a
 }
 
 impl<const N: usize> Air for CollatzAir<N> {

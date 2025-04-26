@@ -43,3 +43,8 @@ impl<const N: usize> ToElements<BaseElement> for PublicInputs<N> {
         self.values.to_vec()
     }
 }
+
+/// Returns zero only when a = zero || a == one.
+pub fn is_binary<E: FieldElement>(a: E) -> E {
+    a * a - a
+}
