@@ -1,37 +1,12 @@
 use winterfell::{
-    math::{fields::f128::BaseElement, FieldElement, ToElements},
+    math::{fields::f128::BaseElement, FieldElement},
     Air, AirContext, Assertion, EvaluationFrame, TransitionConstraintDegree,
 };
+use crate::utils::PublicInputs;
 
 pub struct CollatzAir<const N: usize> {
     context: AirContext<BaseElement>,
     first: [BaseElement; N],
-}
-
-// The public inputs is required to implement the `ToElements` trait.
-// Due to the orphan rule, we need to create a newtype to hold the array.
-pub struct PublicInputs<const N: usize> ([BaseElement; N]);
-
-impl<const N: usize> PublicInputs<N> {
-    pub fn new(value: [BaseElement; N]) -> Self {
-        Self(value)
-    }
-}
-
-impl<const N: usize> From<u32> for PublicInputs<N> {
-    fn from(value: u32) -> Self {
-        let mut first = [BaseElement::ZERO; N];
-        for i in 0..N {
-            first[i] = BaseElement::from((value >> i) & 1);
-        }
-        PublicInputs(first)
-    }
-}
-
-impl<const N: usize> ToElements<BaseElement> for PublicInputs<N> {
-    fn to_elements(&self) -> Vec<BaseElement> {
-        self.0.to_vec()
-    }
 }
 
 /// Returns zero only when a = zero || a == one.
@@ -57,7 +32,7 @@ impl<const N: usize> Air for CollatzAir<N> {
         // we have 2*N boundary constraints: N for the first row (must equal the public input), N for the last row (must be 1)
         CollatzAir {
             context: AirContext::new(trace_info, transition_constraints, 2 * N, options),
-            first: pub_inputs.0,
+            first: pub_inputs.values,
         }
     }
 

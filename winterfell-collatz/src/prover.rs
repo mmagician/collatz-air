@@ -10,7 +10,8 @@ use winterfell::{
     ProofOptions, Prover, StarkDomain, TraceInfo, TracePolyTable, TraceTable,
 };
 
-use crate::air::{CollatzAir, PublicInputs};
+use crate::air::CollatzAir;
+use crate::utils::PublicInputs;
 
 pub struct CollatzProver<H: ElementHasher, const N: usize> {
     options: ProofOptions,
