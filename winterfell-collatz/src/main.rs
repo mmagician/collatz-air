@@ -14,6 +14,12 @@ use winterfell::{
     math::fields::f128::BaseElement,
     verify, BatchingMethod, FieldExtension, ProofOptions, Prover,
 };
+
+// Type definitions
+type Hasher = Blake3_256<BaseElement>;
+type Merkle = MerkleTree<Hasher>;
+type Coin = DefaultRandomCoin<Hasher>;
+
 const N: usize = 6;
 
 fn main() {
@@ -44,19 +50,17 @@ fn main() {
         BatchingMethod::Linear,
     );
 
-    let prover =
-        CollatzProver::<Blake3_256<BaseElement>, N>::new(proof_options.clone(), starting_value);
+    let prover = CollatzProver::<Hasher, N>::new(proof_options.clone(), starting_value);
 
     let trace = prover.build_trace();
     let public_inputs = prover.get_pub_inputs(&trace);
     let proof = prover.prove(trace).unwrap();
 
     let acceptable_options = winterfell::AcceptableOptions::OptionSet(vec![proof_options]);
-    assert!(verify::<
-        CollatzAir<N>,
-        Blake3_256<BaseElement>,
-        DefaultRandomCoin<Blake3_256<BaseElement>>,
-        MerkleTree<Blake3_256<BaseElement>>,
-    >(proof, public_inputs, &acceptable_options)
+    assert!(verify::<CollatzAir<N>, Hasher, Coin, Merkle>(
+        proof,
+        public_inputs,
+        &acceptable_options
+    )
     .is_ok());
 }
