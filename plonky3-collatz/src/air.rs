@@ -24,7 +24,6 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
         let local = main.row_slice(0).expect("The matrix is empty?");
         let next = main.row_slice(1).expect("The matrix only has 1 row?");
 
-        // Split the row into value bits and step counter
         let value_bits = &local[0..N];
         let next_value_bits = &next[0..N];
         let step_counter = local[N];
@@ -57,7 +56,7 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
         // Transition constraints
         // ------------------------------------------------------------------------------------------------
 
-        // Consistency constraint: ensure each cell in the binary decision column is indeed a bit.
+        // Consistency constraint: ensure each cell in the binary decomposition column is indeed a bit.
         // Note, that we constrain the next row's value bits
         // (the first row is already guaranteed to be binary and correct due to the boundary constraint check)
         for i in 0..N {
@@ -82,14 +81,14 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
 
         // Main transition constraint: apply the collatz_rule OR repeat row
         builder.when_transition().assert_eq(
-            // apply the Collatz transition rule
+            // Apply the Collatz transition rule
             next_is_transition.clone()
                 * ((AB::Expr::TWO * next_weighted_sum.clone())
                     - (is_odd
                         * AB::Expr::TWO
                         * (current_weighted_sum.clone() * AB::Expr::from_u32(3) + AB::Expr::ONE)
                         + (AB::Expr::ONE - is_odd) * current_weighted_sum.clone())),
-            // no transition, repeat the current row
+            // No transition, repeat the current row
             (AB::Expr::ONE - next_is_transition.clone())
                 * (current_weighted_sum - next_weighted_sum),
         );
