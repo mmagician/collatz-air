@@ -1,4 +1,4 @@
-# Collatz Air Implementation in Plonky3
+# Collatz Sequence Implementations
 
 <div align="center">
   <p align="center">
@@ -11,4 +11,19 @@
   </p>
 </div>
 
-This repo implements a Collatz sequence generator and prover using the Plonky3 framework.
+This repository contains implementations of the Collatz sequence using different backends:
+
+### plonky3-collatz
+Implementation using the [Plonky3](https://github.com/Plonky3/Plonky3) framework.
+
+### winterfell-collatz
+Implementation using the [Winterfell](https://github.com/novifinancial/winterfell) framework (coming soon).
+
+## Usage
+
+To run a specific workspace:
+```bash
+cargo run -p plonky3-collatz
+# or
+cargo run -p winterfell-collatz
+```
