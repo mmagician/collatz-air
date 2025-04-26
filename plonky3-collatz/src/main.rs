@@ -66,8 +66,12 @@ fn main() -> Result<(), impl Debug> {
     let config = MyConfig::new(pcs, challenger);
 
     let starting_value = 52;
-    let air = CollatzAir::<N> { starting_value };
-    let trace = generate_collatz_trace::<N, Val>(starting_value);
+    let (trace, steps_count) = generate_collatz_trace::<N, Val>(starting_value);
+    
+    let air = CollatzAir::<N> { 
+        starting_value,
+        steps_count,
+    };
 
     let proof = prove(&config, &air, trace, &vec![]);
 
