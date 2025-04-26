@@ -5,6 +5,9 @@ use winterfell::{
 use crate::utils::PublicInputs;
 use crate::utils::is_binary;
 
+/// AIR for proving Collatz conjecture sequences.
+/// The trace consists of N columns, each representing a bit in the binary representation (LSB first)
+/// of the current number in the sequence.
 pub struct CollatzAir<const N: usize> {
     context: AirContext<BaseElement>,
     first: [BaseElement; N],
@@ -20,14 +23,17 @@ impl<const N: usize> Air for CollatzAir<N> {
         options: winterfell::ProofOptions,
     ) -> Self {
         assert_eq!(N, trace_info.width());
-        // binary transition constraints for each column (col*col - col) have degree 2
+        // We have N consistency constraints(part of the transition constraints): the value in each column must be binary (degree 2: col*col - col = 0)
         let mut transition_constraints = vec![TransitionConstraintDegree::new(2); N];
-        // main transition constraint, multiplies the first column (partiy bit) by the weighted sum of the other columns, resulting in degree 2 constraint. Then we apply the OR condition (degree 1), resulting in total degree 3.
+
+        // Main transition constraint, multiplies the first column (parity bit) by the weighted sum of the other columns, resulting in degree 2 constraint. Then we apply the OR condition (degree 1), resulting in total degree 3.
         transition_constraints.push(TransitionConstraintDegree::new(3));
 
-        // we have 2*N boundary constraints: N for the first row (must equal the public input), N for the last row (must be 1)
+        // We have 2*N boundary constraints: N for the first row (must equal the public input), N for the last row (must be 1)
+        let num_boundary_constraints = 2 * N;
+
         CollatzAir {
-            context: AirContext::new(trace_info, transition_constraints, 2 * N, options),
+            context: AirContext::new(trace_info, transition_constraints, num_boundary_constraints, options),
             first: pub_inputs.values,
         }
     }
@@ -45,9 +51,7 @@ impl<const N: usize> Air for CollatzAir<N> {
         let current = frame.current();
         let next = frame.next();
 
-        debug_assert_eq!(N, current.len());
-        debug_assert_eq!(N, next.len());
-        // ensure each cell is binary
+        // Consistency constraint: ensure each cell is binary
         for i in 0..N {
             result[i] = is_binary(next[i]);
         }
@@ -57,7 +61,7 @@ impl<const N: usize> Air for CollatzAir<N> {
         let next_weighted_sum =
             (0..N).fold(E::ZERO, |acc, i| acc + (E::from(2u32.pow(i as u32)) * next[i]));
 
-        // next transitions constraint: apply the collatz_rule OR repeat row
+        // Main transition constraint: apply the collatz_rule OR repeat row
         // (Needed to ensure valid transitions for the entire trace length, even when we pad with 1's to the next power of two).
         // Note, that while our prover fills the remainder of the trace with 1's, it actually doesn't matter *which* row is repeated.
         // E.g. For the Collatz sequence "4, 2, 1", the prover could fill the trace with (the binary representations of):
@@ -87,14 +91,12 @@ impl<const N: usize> Air for CollatzAir<N> {
     }
 
     fn get_assertions(&self) -> Vec<Assertion<Self::BaseField>> {
-        // the whole first row is the initial state
+        // Boundary constraint: the whole first row is the initial state
         let mut assertions: Vec<Assertion<BaseElement>> =
             (0..N).map(|i| Assertion::single(i, 0, self.first[i])).collect();
 
-        // the weighted sum of the last row is 1
-        // first column is 1
+        // Boundary constraint: the weighted sum of the last row is 1, i.e. the first column is 1, the rest are 0
         let last_step = self.trace_length() - 1;
-        // the rest are 0
         assertions.push(Assertion::single(0, last_step, Self::BaseField::ONE));
         for i in 1..N {
             assertions.push(Assertion::single(i, last_step, Self::BaseField::ZERO));

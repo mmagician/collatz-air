@@ -1,6 +1,7 @@
 use p3_field::Field;
 use p3_matrix::dense::RowMajorMatrix;
 
+/// Computes the Collatz sequence starting from n until it reaches 1
 fn compute_collatz_sequence(n: u32) -> Vec<u32> {
     let mut sequence = Vec::new();
     let mut current = n;
@@ -17,6 +18,9 @@ fn compute_collatz_sequence(n: u32) -> Vec<u32> {
     sequence
 }
 
+/// Generates a trace matrix for the Collatz sequence
+/// Each row represents a number in the sequence in binary form (LSB first)
+/// The matrix is padded to the next power of two with (the binary representation of) 1's
 pub(crate) fn generate_collatz_trace<const N: usize, F: Field>(
     starting_value: u32,
 ) -> RowMajorMatrix<F> {
