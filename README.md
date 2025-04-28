@@ -18,9 +18,9 @@ This repository contains implementations of the Collatz sequence using different
 The Collatz sequence is a sequence of numbers defined by the following rules:
 
 1. Start with any positive integer n.
-2. If n is even, divide it by 2.
-3. If n is odd, multiply it by 3 and add 1.
-4. Repeat the process with the result.
+2. If n is 1, stop.
+3. If n is even, divide it by 2.
+4. If n is odd, multiply it by 3 and add 1.
 
 The Collatz conjecture states that for any positive integer n, the sequence will eventually reach 1.
 
