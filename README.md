@@ -34,7 +34,7 @@ Public inputs:
 
 
 ### plonky3-collatz
-Implemented using the [Plonky3](https://github.com/Plonky3/Plonky3) backend for defining the AIR constraints. We use `p3-uni-stark` as the proving system.
+Implemented using the [Plonky3](https://github.com/Plonky3/Plonky3) backend for defining the AIR constraints. We use `p3-uni-stark` as the proving system in the example.
 
 Run the example with:
 ```bash
@@ -42,7 +42,7 @@ cargo run -p plonky3-collatz
 ```
 
 ### winterfell-collatz
-Implemented using the [Winterfell](https://github.com/facebook/winterfell) backend for defining the AIR constraints, and their STARK prover.
+Implemented using the [Winterfell](https://github.com/facebook/winterfell) backend for defining the AIR constraints.
 
 Run the example with:
 ```bash
