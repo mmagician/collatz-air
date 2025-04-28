@@ -11,7 +11,7 @@ edition = "2024"
 authors = ["Marti Gorny <marti@np.engineering>"]
 description = "Collatz sequence implementations using Plonky3 and Winterfell backends"
 license = "MIT"
-repository = "https://github.com/m2magician/collatz-air"
+repository = "https://github.com/mmagician/collatz-air"
 
 [workspace.dependencies]
 tracing = { version = "0.1", default-features = false }
