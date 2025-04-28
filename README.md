@@ -48,3 +48,12 @@ Run the example with:
 ```bash
 cargo run -p winterfell-collatz
 ```
+
+
+## Acknowledgments
+
+Repo structure inspired by the [Fibonacci example](https://github.com/BrianSeong99/Plonky3_Fibonacci/) by @BrianSeong99, combined with the examples in the [Winterfell repo](https://github.com/facebook/winterfell/tree/main/examples).
+
+## Disclaimer
+
+This code is provided for experimental and educational purposes only. It has not been audited and should not be used in production environments or for any security-critical applications. Use at your own risk.
