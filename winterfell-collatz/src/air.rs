@@ -81,6 +81,8 @@ impl<const N: usize> Air for CollatzAir<N> {
             acc + (E::from(2u32.pow(i as u32)) * next[i])
         });
 
+        let is_odd = current[0];
+
         // Main transition constraint: apply the collatz_rule OR repeat row
         // (Needed to ensure valid transitions for the entire trace length, even when we pad with 1's to the next power of two).
         // Note, that while our prover fills the remainder of the trace with 1's, it actually doesn't matter *which* row is repeated.
@@ -103,8 +105,8 @@ impl<const N: usize> Air for CollatzAir<N> {
             // Apply the Collatz transition rule
             next_is_transition * (
                 (E::from(2u32) * next_weighted_sum)
-                - (current[0] * E::from(2u32) * (current_weighted_sum * E::from(3u32) + E::ONE)
-                + (E::ONE - current[0]) * current_weighted_sum)
+                - (is_odd * E::from(2u32) * (current_weighted_sum * E::from(3u32) + E::ONE)
+                + (E::ONE - is_odd) * current_weighted_sum)
             )
             // No transition, repeat the current row
             - (E::ONE - next_is_transition) * (next_weighted_sum - current_weighted_sum);
@@ -112,7 +114,10 @@ impl<const N: usize> Air for CollatzAir<N> {
         // Step counter constraint:
         // If next_is_transition = 1, increment step counter
         // If next_is_transition = 0, keep step counter the same
-        result[N + 2] = next_is_transition * (next_step_counter - step_counter - E::ONE)
+        result[N + 2] =
+            // If there is a transition, then the step counter should be incremented
+            next_is_transition * (next_step_counter - step_counter - E::ONE)
+            // If there is no transition, then the step counter should be the same
             - (E::ONE - next_is_transition) * (next_step_counter - step_counter);
     }
 
@@ -127,8 +132,8 @@ impl<const N: usize> Air for CollatzAir<N> {
         // Initial transition flag is 0 (not a transition)
         assertions.push(Assertion::single(N + 1, 0, BaseElement::ZERO));
 
-        // Boundary constraint: the weighted sum of the last row is 1, i.e. the first column is 1, the rest are 0
         let last_step = self.trace_length() - 1;
+        // Boundary constraint: the weighted sum of the last row is 1, i.e. the first column is 1, the rest are 0
         assertions.push(Assertion::single(0, last_step, Self::BaseField::ONE));
         for i in 1..N {
             assertions.push(Assertion::single(i, last_step, Self::BaseField::ZERO));

@@ -5,7 +5,9 @@ use p3_matrix::Matrix;
 
 /// AIR for proving Collatz conjecture sequences.
 /// The trace consists of N columns, each representing a bit in the binary representation (LSB first)
-/// of the current number in the sequence, plus an additional column for the step counter.
+/// of the current number in the sequence, plus two additional columns:
+/// - Column N: step counter
+/// - Column N+1: transition flag (1 = transition, 0 = repeat)
 pub struct CollatzAir<const N: usize> {
     pub starting_value: u32,
     pub steps_count: u32,
@@ -13,7 +15,6 @@ pub struct CollatzAir<const N: usize> {
 
 impl<const N: usize, F: Field> BaseAir<F> for CollatzAir<N> {
     fn width(&self) -> usize {
-        // Add 1 for the step counter column
         N + 2
     }
 }
@@ -35,7 +36,8 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
         // Initial boundary constraints
         // ------------------------------------------------------------------------------------------------
 
-        // Boundary constraint: enforce starting values based on the binary representation of starting_value
+        // Enforce starting values based on the binary representation of `starting_value`
+        // `starting_value` is part of the public input.
         for i in 0..N {
             builder.when_first_row().assert_eq(
                 value_bits[i],
@@ -57,13 +59,13 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
         // ------------------------------------------------------------------------------------------------
 
         // Consistency constraint: ensure each cell in the binary decomposition column is indeed a bit.
-        // Note, that we constrain the next row's value bits
+        // Note that here we constrain the next row's value bits
         // (the first row is already guaranteed to be binary and correct due to the boundary constraint check)
         for i in 0..N {
             builder.when_transition().assert_bool(next_value_bits[i]);
         }
-        // Consistency constraint: ensure the next `is_transition` value is indeed a bit.
-        // Again, we constrain the next row's `is_transition`.
+        // Consistency constraint: ensure the next is_transition value is indeed a bit.
+        // Again, we constrain the next row's is_transition.
         // (the value in the first row is already guaranteed to be a zero by the boundary constraint)
         builder
             .when_transition()
@@ -93,14 +95,15 @@ impl<AB: AirBuilder, const N: usize> Air<AB> for CollatzAir<N> {
                 * (current_weighted_sum - next_weighted_sum),
         );
 
-        // Step counter constraint: If `is_transition` is 1, then `next_step_counter` should be incremented from one row to the next.
-        // If no transition is made, then the step counter should be the same as the current step counter.
+        // Step counter constraint:
+        // If next_is_transition = 1, increment step counter
+        // If next_is_transition = 0, keep step counter the same
         builder.when_transition().assert_eq(
             // If there is a transition, then the step counter should be incremented
             next_is_transition.clone()
                 * (next_step_counter.clone() - step_counter.clone() - AB::Expr::ONE),
             // If there is no transition, then the step counter should be the same
-            (AB::Expr::ONE - next_is_transition.clone()) * (step_counter - next_step_counter),
+            (AB::Expr::ONE - next_is_transition) * (step_counter - next_step_counter),
         );
 
         // ------------------------------------------------------------------------------------------------
