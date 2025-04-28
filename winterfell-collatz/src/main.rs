@@ -50,7 +50,11 @@ fn main() {
         BatchingMethod::Linear,
     );
 
-    let prover = CollatzProver::<Hasher, N>::new(proof_options.clone(), starting_value);
+    let prover = CollatzProver::<Hasher, N>::new(
+        proof_options.clone(),
+        starting_value,
+        (sequence.len() - 1) as u32,
+    );
 
     let trace = prover.build_trace();
     let public_inputs = prover.get_pub_inputs(&trace);

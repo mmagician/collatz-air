@@ -16,14 +16,16 @@ use crate::utils::PublicInputs;
 pub struct CollatzProver<H: ElementHasher, const N: usize> {
     options: ProofOptions,
     starting_value: u32,
+    steps_count: u32,
     _hasher: PhantomData<H>,
 }
 
 impl<H: ElementHasher, const N: usize> CollatzProver<H, N> {
-    pub fn new(options: ProofOptions, starting_value: u32) -> Self {
+    pub fn new(options: ProofOptions, starting_value: u32, steps_count: u32) -> Self {
         Self {
             options,
             starting_value,
+            steps_count,
             _hasher: PhantomData,
         }
     }
@@ -32,23 +34,33 @@ impl<H: ElementHasher, const N: usize> CollatzProver<H, N> {
         // we need to dynamically compute the trace length, it depends on the instance starting value
         let mut sequence = compute_collatz_sequence(self.starting_value);
         let mut trace_length = sequence.len();
+        let num_steps = trace_length - 1;
         // pad the trace length to the next power of 2
         trace_length = trace_length.next_power_of_two();
         // fill the rest of the sequence with ones
         sequence.resize(trace_length, 1);
 
-        let mut trace = TraceTable::new(N, trace_length);
+        let mut trace = TraceTable::new(N + 2, trace_length);
         trace.fill(
             |state| {
                 for i in 0..N {
                     state[i] = BaseElement::from((self.starting_value >> i) & 1);
                 }
+                state[N] = BaseElement::ZERO;
+                state[N + 1] = BaseElement::ZERO;
             },
             |j, state| {
                 let next_val = sequence[j + 1];
 
                 for i in 0..N {
                     state[i] = BaseElement::from((next_val >> i) & 1);
+                }
+                if j + 1 <= num_steps {
+                    state[N] = BaseElement::from((j + 1) as u32);
+                    state[N + 1] = BaseElement::ONE;
+                } else {
+                    state[N] = BaseElement::from(num_steps as u32);
+                    state[N + 1] = BaseElement::ZERO;
                 }
             },
         );
@@ -75,13 +87,9 @@ where
 
     fn get_pub_inputs(
         &self,
-        trace: &Self::Trace,
+        _trace: &Self::Trace,
     ) -> <<Self as Prover>::Air as winterfell::Air>::PublicInputs {
-        // public input is the first step of the sequence
-        let mut first = [BaseElement::ZERO; N];
-        trace.read_row_into(0, &mut first);
-
-        PublicInputs::new(first)
+        PublicInputs::from((self.starting_value, self.steps_count))
     }
 
     fn options(&self) -> &ProofOptions {
