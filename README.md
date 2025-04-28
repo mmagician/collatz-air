@@ -52,6 +52,8 @@ cargo run -p winterfell-collatz
 
 ## Acknowledgments
 
+The AIR constraints for the Collatz conjecture were originally described by StarkWare in the [Arithmetization I](https://medium.com/starkware/arithmetization-i-15c046390862) article. Those constraints, however, only attested to the knowledge of correct series of values in the Collatz sequence. Here, we also add the number of steps in that sequence as public input, and convince the verifier that the provided number of steps for a given starting value is correct. This is arguably more useful, for the rare occasion you want to convince someone of the validity of your Collatz computation.
+
 Repo structure inspired by the [Fibonacci example](https://github.com/BrianSeong99/Plonky3_Fibonacci/) by @BrianSeong99, combined with the examples in the [Winterfell repo](https://github.com/facebook/winterfell/tree/main/examples).
 
 ## Disclaimer
